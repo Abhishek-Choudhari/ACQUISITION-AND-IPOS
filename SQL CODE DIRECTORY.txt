@@ -1,0 +1,148 @@
+Statement(1): Distribution of acquirers who already did IPO vs who didn't
+
+select a.acquirer_uuid, a.acquirer_name, a.acquirer_region, a.acquired_on, b.org_uuid,
+b.org_name, b.region, b.went_public_on,
+Case
+When a.acquirer_uuid = b.org_uuid Then 'Did'
+else 'Did Not'
+End [Ipo Status]
+From acquisitions a
+Left Join
+IPO b
+On a.[acquirer_uuid] = b.[org_uuid]
+
+
+Statement(2): Regional Analysis of Acquirers and acquirees
+
+-- for Acquirers
+select [acquirer_region],
+Count([acquirer_uuid]) as [no of acquirer], Sum([price_usd]) as [Total Price]
+from [dbo].[acquisitions]
+Group By [acquirer_region]
+Order By [Total Price] desc
+
+-- for acquirees
+select [acquiree_region],
+Count([acquiree_uuid]) as [no of acquiree], Sum([price_usd]) as [Total Price]
+from [dbo].[acquisitions]
+Group By [acquiree_region]
+Order By [Total Price] desc
+ 
+ 
+Statement(3): Monthly analysis of number of acquisitions and IPOs
+
+--monthly analysis of ipos
+Select [Month], [No of acquirer did IPO] From
+(
+select Month(b.went_public_on) as [Month_no], Datename(Month, b.went_public_on) as [Month],
+Count(a.acquirer_uuid) as [No of acquirer did IPO] From acquisitions a
+Join
+IPO b
+On a.[acquirer_uuid] = b.[org_uuid]
+Group By Month(b.went_public_on), Datename(Month, b.went_public_on)
+) as z
+Order By [Month_no]
+
+--monthly analysis of Acuisition
+Select [Month], [No of acquirer did Acuisition] From
+(
+select Month([acquired_on]) as [Month_no], Datename(Month, [acquired_on]) as [Month],
+Count(acquirer_uuid) as [No of acquirer did Acuisition] From acquisitions 
+Group By Month([acquired_on]), Datename(Month, [acquired_on])
+) as z	
+Order By [Month_no]
+
+ 
+
+Statement(4): Analysis of social media presence of acquirers vs acquirees
+
+-- For acquirees
+Select [Status], Count(acquiree_uuid) as [No of acquirees] From
+(
+Select acquiree_uuid, [acquiree_social_media],
+Case When [acquiree_social_media] = 0 Then 'Inactive Users'
+When [acquiree_social_media] = 1 Then 'Aactive Users'
+End [Status] From acquisitions
+) as x
+Group By [Status]
+
+-- For acquirers
+Select [Status], Count([acquirer_uuid]) as [No of acquirers] From
+(
+Select [acquirer_uuid], [acquirer_social_media],
+Case When [acquirer_social_media] = 0 Then 'Inactive Users'
+When [acquirer_social_media] = 1 Then 'Aactive Users'
+End [Status] From acquisitions
+) as y
+Group By [Status]
+
+
+Statement(5): Qualification (Degree) and Institution Analysis of directors of acquirers vs acquirees
+
+-- Qualification wise acquiree Director Distribution
+Select [degree_type], count(a.acquiree_Director_Id) as [Count of acquiree Director]
+From acquisitions a
+Join 
+Degree b
+On a.acquiree_Director_Id = b.person_uuid
+Where a.acquiree_Director_Id is Not Null
+Group By [degree_type]
+Order By [Count of acquiree Director] desc
+
+-- Qualification wise acquirer director Distribution
+Select [degree_type], count(a.[acquirer_director_Id]) as [Count of acquirer director]
+From acquisitions a
+Join 
+Degree b
+On a.[acquirer_director_Id] = b.person_uuid
+Where a.acquiree_Director_Id is Not Null
+Group By [degree_type]
+Order By [Count of acquirer director] desc
+
+-- Institute wise acquiree Director Distribution
+Select b.institution_name, count(a.acquiree_Director_Id) as [Count of acquiree Director]
+From acquisitions a
+Join 
+Degree b
+On a.acquiree_Director_Id = b.person_uuid
+Where a.acquiree_Director_Id is Not Null
+Group By institution_name
+Order By [Count of acquiree Director] desc
+
+-- Institute wise acquirer director Distribution
+Select b.institution_name, count(a.[acquirer_director_Id]) as [Count of acquirer director]
+From acquisitions a
+Join 
+Degree b
+On a.[acquirer_director_Id] = b.person_uuid
+Where a.[acquirer_director_Id] is Not Null
+Group By institution_name
+Order By [Count of acquirer director] desc
+
+ 
+Statement(6): Check number of such acquisitions where both directors of acquirer and acquiree are from the same institute
+
+Select b.institution_name, count(a.acquiree_Director_Id) as [Count of  Director]
+From acquisitions a
+Join 
+Degree b
+On a.acquiree_Director_Id = b.person_uuid
+Where a.acquiree_Director_Id is Not Null
+Group By institution_name
+
+INTERSECT
+
+Select b.institution_name, count(a.[acquirer_director_Id]) as [Count of  Director]
+From acquisitions a
+Join 
+Degree b
+On a.[acquirer_director_Id] = b.person_uuid
+Where a.[acquirer_director_Id] is Not Null
+Group By institution_name
+Order By [Count of  Director] desc
+
+ 
+
+
+
+
