@@ -5,5 +5,5 @@ didn't
 • Analysis of social media presence of acquirer vs acquirees
 • Qualification (Degree) and Institution Analysis of directors of 
 acquirer vs acquirees
-• Check the number of such acquisitions where both directorsof the
+• Check the number of such acquisitions where both directors of the
 acquirer and acquiree are from the same institute
